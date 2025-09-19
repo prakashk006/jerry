@@ -13,8 +13,8 @@
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
             background: linear-gradient(to bottom, #87CEEB 0%, #B0E0E6 100%);
-            /* Prevent scrollbars from animated clouds */
-            overflow: hidden;
+            /* UPDATED: Allow vertical scroll but prevent horizontal scroll */
+            overflow-x: hidden;
             color: #E2E8F0;
         }
         /* Custom scrollbar for the chat area */
@@ -238,7 +238,8 @@
     <div id="confetti-container" class="fixed inset-0 pointer-events-none z-30"></div>
 
     <!-- Main Game Container -->
-    <div class="w-full max-w-2xl min-h-screen lg:h-[90vh] flex flex-col bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden border border-gray-700 relative z-10">
+    <!-- UPDATED: Added id="game-container" for JS targeting -->
+    <div id="game-container" class="w-full max-w-2xl min-h-screen lg:h-[90vh] flex flex-col bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-2xl overflow-hidden border border-gray-700 relative z-10">
         <!-- Header -->
         <div class="bg-gray-700/80 p-4 grid grid-cols-3 items-center border-b border-gray-600">
             <div class="flex justify-start">
@@ -1013,6 +1014,35 @@
                 askNewQuestion();
             }, 500);
         });
+        
+        // NEW: Function to handle mobile keyboard issues
+        function handleMobileKeyboard() {
+            const mainContainer = document.getElementById('game-container');
+            const chatContainer = document.getElementById('chat-container');
+
+            // Check if the VisualViewport API is supported
+            if (window.visualViewport) {
+                const initialHeight = window.innerHeight;
+
+                const resizeHandler = () => {
+                    // Set the container height to the visual viewport height
+                    mainContainer.style.height = `${window.visualViewport.height}px`;
+
+                    // When keyboard is likely visible (height has shrunk), scroll to bottom
+                    if (window.innerHeight < initialHeight) {
+                        setTimeout(() => {
+                            chatContainer.scrollTop = chatContainer.scrollHeight;
+                            userInput.scrollIntoView();
+                        }, 100); // Small delay to allow layout to settle
+                    }
+                };
+
+                window.visualViewport.addEventListener('resize', resizeHandler);
+                
+                // Initial set
+                resizeHandler();
+            }
+        }
 
         // --- Game Initialization ---
         function init() {
@@ -1027,6 +1057,9 @@
             
             showTypingIndicator();
             setTimeout(() => addMessage(initialGreeting, 'bot'), 1200);
+            
+            // NEW: Add mobile keyboard compatibility logic
+            handleMobileKeyboard();
             
             // Reset game state
             currentQuestionIndex = 0;
@@ -1046,3 +1079,4 @@
     </script>
 </body>
 </html>
+
